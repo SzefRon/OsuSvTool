@@ -1,11 +1,13 @@
 #pragma once
 
-#ifndef WX_PRECOMP
+#include "MainFrame.h"
+
 #include <wx/wx.h>
-#endif
 
 class SVApp : public wxApp
 {
+private:
+    MainFrame *mainFrame;
 public:
     virtual bool OnInit();
 };

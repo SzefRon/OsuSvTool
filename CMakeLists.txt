@@ -6,9 +6,9 @@ if(wxWidgets_USE_FILE) # not defined in CONFIG mode
     include(${wxWidgets_USE_FILE})
 endif()
 
-set(SRC_FILES
-    SVapp.cpp
-    )
+file(GLOB_RECURSE SRC_FILES ./src/*.cpp)
 
 add_executable(osusvtool WIN32 ${SRC_FILES})
 target_link_libraries(osusvtool ${wxWidgets_LIBRARIES})
+
+target_include_directories(osusvtool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
