@@ -1,4 +1,4 @@
-#include "NormalizePanel.h"
+#include "UI/NormalizePanel.h"
 
 #include <wx/gbsizer.h>
 
@@ -18,17 +18,18 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
         // Auto-detect button
     wxRadioButton *autoButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Auto-detect");
     autoButton->SetValue(true);
-    radioSizer->Add(autoButton, 2, wxALIGN_CENTER | wxUP | wxDOWN, 10);
+    radioSizer->Add(autoButton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
     
         // Empty column
     radioSizer->Add(0, 0, 1);
     
         // Custom BPM button
     wxRadioButton *customBPMButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Custom BPM");
-    radioSizer->Add(customBPMButton, 2, wxALIGN_CENTER | wxUP | wxDOWN, 10);
+    radioSizer->Add(customBPMButton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
     
         // Empty column
     radioSizer->Add(0, 0, 1);
+
     sizer->Add(radioSizer, wxGBPosition(1, 0), wxGBSpan(1, 2), wxGROW | wxLEFT | wxRIGHT, 10);
 
     // Text + Spinctrl

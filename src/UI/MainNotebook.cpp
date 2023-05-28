@@ -1,6 +1,6 @@
-#include "MainNotebook.h"
+#include "UI/MainNotebook.h"
 
-#include "NormalizePanel.h"
+#include "UI/NormalizePanel.h"
 
 MainNotebook::MainNotebook(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : wxNotebook(parent, id, pos, size, style, name)

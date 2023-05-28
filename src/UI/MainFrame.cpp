@@ -1,10 +1,10 @@
-#include "MainFrame.h"
+#include "UI/MainFrame.h"
 
 #include <cstdlib>
 #include <wx/gbsizer.h>
 #include <wx/msgdlg.h>
 
-#include "MainNotebook.h"
+#include "UI/MainNotebook.h"
 
 MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &size)
     : wxFrame(NULL, wxID_ANY, title, pos, size)
@@ -21,6 +21,7 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &si
 
     mapFilePicker = new wxFilePickerCtrl(mainPanel, wxID_ANY, wxEmptyString, wxString("Select a map's .osu file"), wxString("*.osu"));
     mapFilePicker->DragAcceptFiles(true);
+    mapFilePicker->GetTextCtrl()->SetHint("Supports Drag & Drop");
     wxFileName osuSongsPath(wxString(std::getenv("LOCALAPPDATA")) + wxString("/osu!/Songs"));
     if (osuSongsPath.DirExists()) {
         mapFilePicker->SetInitialDirectory(osuSongsPath.GetAbsolutePath());
@@ -48,12 +49,12 @@ void MainFrame::OnFileDrop(wxDropFilesEvent &event)
 
     if (droppedFile.GetExt() == wxString("osu")) {
         if (event.GetNumberOfFiles() != 1) {
-            wxMessageDialog *multipleFilesDialog = new wxMessageDialog(this, "Multiple files sent.\nOnly the last one will be processed.", "Warning", wxICON_WARNING);
+            wxMessageDialog *multipleFilesDialog = new wxMessageDialog(this, "Multiple files dropped\nOnly the last one will be processed", "Warning", wxICON_WARNING);
             multipleFilesDialog->ShowModal();
         }
         mapFilePicker->SetPath(wxString(droppedFiles[0]));
     } else {
-        wxMessageDialog *invalidFileDialog = new wxMessageDialog(this, "Invalid file.\nExtension must be \'.osu\'", "Error", wxICON_ERROR);
+        wxMessageDialog *invalidFileDialog = new wxMessageDialog(this, "Invalid file\nFile type must be '.osu'\nNo changes were made", "Error", wxICON_ERROR);
         invalidFileDialog->ShowModal();
     }
 }
