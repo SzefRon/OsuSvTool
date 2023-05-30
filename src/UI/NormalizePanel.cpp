@@ -1,6 +1,7 @@
 #include "UI/NormalizePanel.h"
 
 #include <wx/gbsizer.h>
+#include "Logic/MapConfig.h"
 
 NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : wxPanel(parent, id, pos, size, style, name)
@@ -17,7 +18,6 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
 
         // Auto-detect button
     wxRadioButton *autoButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Auto-detect");
-    autoButton->SetValue(true);
     radioSizer->Add(autoButton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
     
         // Empty column
@@ -45,7 +45,8 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
     sizer->Add(0, 0, wxGBPosition(3, 0), wxGBSpan(1, 2));
 
     // Button
-    wxButton *generateButton = new wxButton(this, wxID_ANY, "Generate SVs");
+    generateButton = new wxButton(this, wxID_ANY, "Generate SVs");
+    generateButton->Disable();
     sizer->Add(generateButton, wxGBPosition(4, 0), wxGBSpan(1, 2), wxGROW | wxLEFT | wxRIGHT, 10);
 
     // Empty row
@@ -63,14 +64,26 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
     // Event binding
     Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnAutoButtonPress, this, autoButton->GetId());
     Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnCustomBPMButtonPress, this, customBPMButton->GetId());
+    Bind(wxEVT_BUTTON, &NormalizePanel::OnGeneratePress, this, generateButton->GetId());
 }
 
 void NormalizePanel::OnAutoButtonPress(wxCommandEvent &event)
 {
+    bool ret = MapConfig::i().autoDetectBPM();
+    double detectedBPM = MapConfig::i().getBPM();
+    bpmSpinCtrl->SetValue(60000.0 / detectedBPM);
     bpmSpinCtrl->Disable();
+    generateButton->Enable();
 }
 
 void NormalizePanel::OnCustomBPMButtonPress(wxCommandEvent &event)
 {
+    MapConfig::i().setBPM(bpmSpinCtrl->GetValue());
     bpmSpinCtrl->Enable();
+    generateButton->Enable();
+}
+
+void NormalizePanel::OnGeneratePress(wxCommandEvent & event)
+{
+
 }

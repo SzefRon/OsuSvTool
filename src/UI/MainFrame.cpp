@@ -5,6 +5,7 @@
 #include <wx/msgdlg.h>
 
 #include "UI/MainNotebook.h"
+#include "Logic/MapConfig.h"
 
 MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &size)
     : wxFrame(NULL, wxID_ANY, title, pos, size)
@@ -40,6 +41,7 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &si
 
     // Event binding
     mapFilePicker->Connect(wxEVT_DROP_FILES, wxDropFilesEventHandler(MainFrame::OnFileDrop), NULL, this);
+    Bind(wxEVT_FILEPICKER_CHANGED, &MainFrame::OnPathPicked, this, mapFilePicker->GetId());
 }
 
 void MainFrame::OnFileDrop(wxDropFilesEvent &event)
@@ -53,8 +55,19 @@ void MainFrame::OnFileDrop(wxDropFilesEvent &event)
             multipleFilesDialog->ShowModal();
         }
         mapFilePicker->SetPath(wxString(droppedFiles[0]));
+        std::wstring fileNameW = droppedFiles[0].wchar_str();
+        MapConfig::i().loadMap(fileNameW);
     } else {
         wxMessageDialog *invalidFileDialog = new wxMessageDialog(this, "Invalid file\nFile type must be '.osu'\nNo changes were made", "Error", wxICON_ERROR);
         invalidFileDialog->ShowModal();
+    }
+}
+
+void MainFrame::OnPathPicked(wxFileDirPickerEvent &event)
+{
+    wxFileName fileName(event.GetPath());
+    if (fileName.FileExists() && fileName.GetExt() == wxString("osu")) {
+        std::wstring fileNameW = fileName.GetFullPath().wchar_str();
+        MapConfig::i().loadMap(fileNameW);
     }
 }

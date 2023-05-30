@@ -9,5 +9,6 @@ public:
     MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
 private:
     wxFilePickerCtrl *mapFilePicker;
-    void MainFrame::OnFileDrop(wxDropFilesEvent& event);
+    void OnFileDrop(wxDropFilesEvent& event);
+    void OnPathPicked(wxFileDirPickerEvent& event);
 };
