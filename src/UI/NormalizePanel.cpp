@@ -85,5 +85,5 @@ void NormalizePanel::OnCustomBPMButtonPress(wxCommandEvent &event)
 
 void NormalizePanel::OnGeneratePress(wxCommandEvent & event)
 {
-
+    MapConfig::i().normalize();
 }

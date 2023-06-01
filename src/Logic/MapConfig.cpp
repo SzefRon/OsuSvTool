@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <deque>
 
 MapConfig::MapConfig()
 {}
@@ -31,6 +30,7 @@ MapConfig &MapConfig::i()
 /// @return 0 - ok, 1 - failed to open file
 short MapConfig::loadMap(std::wstring mapPath)
 {
+    this->mapPath = mapPath;
     isMapLoaded = false;
 
     std::ifstream inputMap(mapPath);
@@ -40,7 +40,7 @@ short MapConfig::loadMap(std::wstring mapPath)
     
     // Info
     while (std::getline(inputMap, line, '\n')) {
-        info += line + '\n';
+        infoBeforeTPs += line + '\n';
         if (line == "[TimingPoints]") {
             break;
         }
@@ -49,15 +49,36 @@ short MapConfig::loadMap(std::wstring mapPath)
     // Timing points
     while (std::getline(inputMap, line, '\n')) {
         if (line.empty() || line.at(0) == '[') {
-            info += line + '\n';
+            infoAfterTPs += line;
             break;
         }
-        timingPoints += line + '\n';
+        std::string val;
+        std::stringstream ss(line);
+        TimingPoint *tp = new TimingPoint();
+
+        std::getline(ss, val, ',');
+        tp->time = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->beatLength = std::stod(val);
+        std::getline(ss, val, ',');
+        tp->meter = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->sampleSet = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->sampleIndex = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->volume = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->uninherited = std::stoi(val);
+        std::getline(ss, val, ',');
+        tp->effects = std::stoi(val);
+
+        timingPoints.push_back(tp);
     }
 
     // Info
     while (std::getline(inputMap, line, '\n')) {
-        info += line + '\n';
+        infoAfterTPs += line + '\n';
         if (line == "[HitObjects]") {
             break;
         }
@@ -67,7 +88,7 @@ short MapConfig::loadMap(std::wstring mapPath)
     // Last non-empty line should be it?
     std::string lastLine;
     while (std::getline(inputMap, line, '\n')) {
-        info += line + '\n';
+        infoAfterTPs += line + '\n';
         if (line.empty()) {
             break;
         }
@@ -89,6 +110,27 @@ short MapConfig::loadMap(std::wstring mapPath)
 
 short MapConfig::normalize()
 {
+    std::ofstream output(mapPath);
+
+    output << infoBeforeTPs;
+
+    for (auto &tp : timingPoints) {
+        output << tp->time << ',' << tp->beatLength << ','
+               << tp->meter << ',' << tp->sampleSet << ','
+               << tp->sampleIndex << ',' << tp->volume << ','
+               << tp->uninherited << ',' << tp->effects << '\n';
+        if (tp->uninherited && tp->beatLength != BPMtoNormalize) {
+            double normalizedSV = -100.0 / (tp->beatLength / BPMtoNormalize);
+            output << tp->time << ',' << normalizedSV << ','
+                   << tp->meter << ',' << tp->sampleSet << ','
+                   << tp->sampleIndex << ',' << tp->volume << ','
+                   << 0 << ',' << tp->effects << '\n';
+        }
+    }
+
+    output << infoAfterTPs;
+
+    output.close();
     return 0;
 }
 
@@ -108,22 +150,22 @@ short MapConfig::autoDetectBPM()
 {
     if (!isMapLoaded) return 1;
 
-    std::deque<std::pair<int, std::string>> durations;
-    std::stringstream ss(timingPoints);
+    std::deque<Duration> durations;
     std::string timingPoint;
 
     int firstTime = 0;
     int secondTime = 0;
-    std::string firstBPM;
-    std::string secondBPM;
+    double firstBPM;
+    double secondBPM;
 
     bool oneTimeFlag = true;
     bool exceededLastObject = false;
 
-    while (!exceededLastObject && std::getline(ss, timingPoint, '\n')) {
-        std::pair<int, std::string> vals = readVal(timingPoint);
-        secondTime = vals.first;
-        secondBPM = vals.second;
+    int priority = 0;
+    for (auto &tp : timingPoints) {
+        if (!tp->uninherited) continue;
+        secondTime = tp->time;
+        secondBPM = tp->beatLength;
 
         if (secondTime > lastObjectTime) {
             exceededLastObject = true;
@@ -137,28 +179,37 @@ short MapConfig::autoDetectBPM()
 
         bool found = false;
         for (auto &duration : durations) {
-            if (duration.second == firstBPM) {
+            if (duration.BPM == firstBPM) {
                 found = true;
-                duration.first += (secondTime - firstTime);
+                duration.duration += (secondTime - firstTime);
+                duration.priority = priority;
             }
         }
         if (!found) {
-            durations.push_back(std::make_pair((secondTime - firstTime), firstBPM));
+            durations.push_back(Duration((secondTime - firstTime), priority, firstBPM));
         }
         firstBPM = secondBPM;
         firstTime = secondTime;
+        priority++;
     }
 
-    int maxDuration = -1;
-    std::string maxBPM;
     for (auto &duration : durations) {
-        if (duration.first > maxDuration) {
-            maxDuration = duration.first;
-            maxBPM = duration.second;
+        if (duration.BPM == firstBPM) {
+            duration.priority = priority;
         }
     }
 
-    BPMtoNormalize = std::stod(maxBPM);
+    Duration maxDuration(-1, -1, 0.0);
+    for (auto &duration : durations) {
+        if ((duration.duration > maxDuration.duration)
+        || (duration.duration == maxDuration.duration && duration.priority > maxDuration.priority)) {
+            maxDuration.duration = duration.duration;
+            maxDuration.BPM = duration.BPM;
+            maxDuration.priority = duration.priority;
+        }
+    }
+
+    BPMtoNormalize = maxDuration.BPM;
 
     return 0;
 }
