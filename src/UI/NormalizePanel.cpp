@@ -17,15 +17,15 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
     radioSizer->Add(0, 0, 1);
 
         // Auto-detect button
-    wxRadioButton *autoButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Auto-detect");
+    autoButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Auto-detect");
     radioSizer->Add(autoButton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
     
         // Empty column
     radioSizer->Add(0, 0, 1);
     
         // Custom BPM button
-    wxRadioButton *customBPMButton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Custom BPM");
-    radioSizer->Add(customBPMButton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
+    customBPMbutton = new wxRadioButton(radioSizer->GetStaticBox(), wxID_ANY, "Custom BPM");
+    radioSizer->Add(customBPMbutton, 0, wxALIGN_CENTER | wxUP | wxDOWN, 10);
     
         // Empty column
     radioSizer->Add(0, 0, 1);
@@ -63,8 +63,17 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
 
     // Event binding
     Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnAutoButtonPress, this, autoButton->GetId());
-    Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnCustomBPMButtonPress, this, customBPMButton->GetId());
+    Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnCustomBPMButtonPress, this, customBPMbutton->GetId());
     Bind(wxEVT_BUTTON, &NormalizePanel::OnGeneratePress, this, generateButton->GetId());
+}
+
+void NormalizePanel::reset()
+{
+    bpmSpinCtrl->SetValue(120.0);
+    generateButton->Disable();
+    autoButton->SetValue(false);
+    customBPMbutton->SetValue(false);
+    MapConfig::i().reset();
 }
 
 void NormalizePanel::OnAutoButtonPress(wxCommandEvent &event)

@@ -2,22 +2,10 @@
 
 #include <fstream>
 #include <sstream>
+#include <set>
 
 MapConfig::MapConfig()
 {}
-
-std::pair<int, std::string> MapConfig::readVal(std::string timingPoint)
-{
-    std::stringstream ss(timingPoint);
-    std::string val;
-
-    std::getline(ss, val, ',');
-    int time = std::stoi(val);
-
-    std::getline(ss, val, ',');
-
-    return std::make_pair(time, val);
-}
 
 MapConfig &MapConfig::i()
 {
@@ -25,13 +13,23 @@ MapConfig &MapConfig::i()
     return I;
 }
 
+void MapConfig::reset()
+{
+    BPMtoNormalize = 120.0;
+    mapPath.clear();
+    infoBeforeTPs.clear();
+    infoAfterTPs.clear();
+    timingPoints.clear();
+    lastObjectTime = 0;
+}
+
 /// @brief 
 /// @param mapPath 
 /// @return 0 - ok, 1 - failed to open file
 short MapConfig::loadMap(std::wstring mapPath)
 {
+    reset();
     this->mapPath = mapPath;
-    isMapLoaded = false;
 
     std::ifstream inputMap(mapPath);
     std::string line;
@@ -104,12 +102,12 @@ short MapConfig::loadMap(std::wstring mapPath)
 
     inputMap.close();
 
-    isMapLoaded = true;
     return 0;
 }
 
 short MapConfig::normalize()
 {
+    if (autoDetectBPM() == 1) return 1;
     std::ofstream output(mapPath);
 
     output << infoBeforeTPs;
@@ -148,22 +146,39 @@ double MapConfig::getBPM()
 /// @return 0 - ok, 1 - map not loaded
 short MapConfig::autoDetectBPM()
 {
-    if (!isMapLoaded) return 1;
+    if (loadMap(mapPath)) return 1;
 
-    std::deque<Duration> durations;
+    std::deque<Duration> UTPdurations;  // UTP - uninherited timing point
     std::string timingPoint;
 
     int firstTime = 0;
     int secondTime = 0;
     double firstBPM;
     double secondBPM;
+    TimingPoint *lastUTP;
 
     bool oneTimeFlag = true;
     bool exceededLastObject = false;
 
+    for (auto &tp : timingPoints) {
+        if (!tp->uninherited) continue;
+        Duration newDuration(0, 0, tp->beatLength);
+        bool found = false;
+        for (auto &duration : UTPdurations) {
+            if (duration.BPM == newDuration.BPM) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            UTPdurations.push_back(newDuration);
+        }
+    }
+
     int priority = 0;
     for (auto &tp : timingPoints) {
         if (!tp->uninherited) continue;
+        lastUTP = tp;
         secondTime = tp->time;
         secondBPM = tp->beatLength;
 
@@ -177,30 +192,37 @@ short MapConfig::autoDetectBPM()
             firstBPM = secondBPM;
         }
 
-        bool found = false;
-        for (auto &duration : durations) {
+        for (auto &duration : UTPdurations) {
             if (duration.BPM == firstBPM) {
-                found = true;
                 duration.duration += (secondTime - firstTime);
                 duration.priority = priority;
+                break;
             }
         }
-        if (!found) {
-            durations.push_back(Duration((secondTime - firstTime), priority, firstBPM));
-        }
+
         firstBPM = secondBPM;
         firstTime = secondTime;
         priority++;
     }
 
-    for (auto &duration : durations) {
+    for (auto &duration : UTPdurations) {
         if (duration.BPM == firstBPM) {
             duration.priority = priority;
+            break;
+        }
+    }
+
+    if (lastUTP->time < lastObjectTime) {
+        for (auto &duration : UTPdurations) {
+            if (duration.BPM == lastUTP->beatLength) {
+                duration.duration += lastObjectTime - lastUTP->time;
+                break;
+            }
         }
     }
 
     Duration maxDuration(-1, -1, 0.0);
-    for (auto &duration : durations) {
+    for (auto &duration : UTPdurations) {
         if ((duration.duration > maxDuration.duration)
         || (duration.duration == maxDuration.duration && duration.priority > maxDuration.priority)) {
             maxDuration.duration = duration.duration;

@@ -11,18 +11,16 @@ class MapConfig
 private:
     MapConfig();
 
-    bool isMapLoaded = false;
-    double BPMtoNormalize;
+    double BPMtoNormalize = 120.0;
 
     std::wstring mapPath;
     std::string infoBeforeTPs;
     std::string infoAfterTPs;
     std::deque<TimingPoint *> timingPoints;
-    int lastObjectTime;
-
-    std::pair<int, std::string> readVal(std::string timingPoint);
+    int lastObjectTime = 0;
 public:
     static MapConfig &i();
+    void reset();
     short loadMap(std::wstring mapPath);
     short normalize();
 

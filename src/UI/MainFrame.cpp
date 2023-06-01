@@ -1,20 +1,18 @@
 #include "UI/MainFrame.h"
 
 #include <cstdlib>
-#include <wx/gbsizer.h>
 #include <wx/msgdlg.h>
 
-#include "UI/MainNotebook.h"
 #include "Logic/MapConfig.h"
 
 MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &size)
     : wxFrame(NULL, wxID_ANY, title, pos, size)
 {
     // Panel + Sizer
-    wxPanel *mainPanel = new wxPanel(this);
+    mainPanel = new wxPanel(this);
     mainPanel->SetBackgroundColour(wxColour("pink"));
 
-    wxGridBagSizer *sizer = new wxGridBagSizer(10, 10);
+    sizer = new wxGridBagSizer(10, 10);
 
     // Text + file picker
     wxStaticText *mapText = new wxStaticText(mainPanel, wxID_ANY, "Select a map to edit:");
@@ -30,7 +28,7 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &si
     sizer->Add(mapFilePicker, wxGBPosition(0, 1), wxGBSpan(1, 1), wxGROW | wxRIGHT | wxUP, 10);
 
     // Notebook
-    MainNotebook *mainNotebook = new MainNotebook(mainPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
+    mainNotebook = new MainNotebook(mainPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
     sizer->Add(mainNotebook, wxGBPosition(1, 0), wxGBSpan(1, 2), wxGROW | wxLEFT | wxRIGHT | wxDOWN, 10);
 
     sizer->AddGrowableCol(1, 1);
@@ -56,7 +54,7 @@ void MainFrame::OnFileDrop(wxDropFilesEvent &event)
         }
         mapFilePicker->SetPath(wxString(droppedFiles[0]));
         std::wstring fileNameW = droppedFiles[0].wchar_str();
-        MapConfig::i().loadMap(fileNameW);
+        mapFileChanged(fileNameW);
     } else {
         wxMessageDialog *invalidFileDialog = new wxMessageDialog(this, "Invalid file\nFile type must be '.osu'\nNo changes were made", "Error", wxICON_ERROR);
         invalidFileDialog->ShowModal();
@@ -68,6 +66,12 @@ void MainFrame::OnPathPicked(wxFileDirPickerEvent &event)
     wxFileName fileName(event.GetPath());
     if (fileName.FileExists() && fileName.GetExt() == wxString("osu")) {
         std::wstring fileNameW = fileName.GetFullPath().wchar_str();
-        MapConfig::i().loadMap(fileNameW);
+        mapFileChanged(fileNameW);
     }
+}
+
+void MainFrame::mapFileChanged(std::wstring fileName)
+{
+    mainNotebook->reset();   
+    MapConfig::i().loadMap(fileName);
 }
