@@ -72,6 +72,6 @@ void MainFrame::OnPathPicked(wxFileDirPickerEvent &event)
 
 void MainFrame::mapFileChanged(std::wstring fileName)
 {
-    mainNotebook->reset();   
-    MapConfig::i().loadMap(fileName);
+    mainNotebook->reset();
+    MapConfig::i().mapPath = fileName;
 }

@@ -73,13 +73,12 @@ void NormalizePanel::reset()
     generateButton->Disable();
     autoButton->SetValue(false);
     customBPMbutton->SetValue(false);
-    MapConfig::i().reset();
 }
 
 void NormalizePanel::OnAutoButtonPress(wxCommandEvent &event)
 {
-    bool ret = MapConfig::i().autoDetectBPM();
-    double detectedBPM = MapConfig::i().getBPM();
+    normalizer.autoDetectBPM();
+    double detectedBPM = normalizer.getBPM();
     bpmSpinCtrl->SetValue(60000.0 / detectedBPM);
     bpmSpinCtrl->Disable();
     generateButton->Enable();
@@ -87,12 +86,13 @@ void NormalizePanel::OnAutoButtonPress(wxCommandEvent &event)
 
 void NormalizePanel::OnCustomBPMButtonPress(wxCommandEvent &event)
 {
-    MapConfig::i().setBPM(bpmSpinCtrl->GetValue());
+    normalizer.setBPM(bpmSpinCtrl->GetValue());
     bpmSpinCtrl->Enable();
     generateButton->Enable();
 }
 
 void NormalizePanel::OnGeneratePress(wxCommandEvent & event)
 {
-    MapConfig::i().normalize();
+    normalizer.normalize();
+    MapConfig::i().saveMap();
 }

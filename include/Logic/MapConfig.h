@@ -11,33 +11,22 @@ class MapConfig
 private:
     MapConfig();
 
-    double BPMtoNormalize = 120.0;
-
-    std::wstring mapPath;
     std::string infoBeforeTPs;
     std::string infoAfterTPs;
     std::deque<TimingPoint *> timingPoints;
+
     int lastObjectTime = 0;
 public:
     static MapConfig &i();
+
+    std::wstring mapPath;
+
     void reset();
-    short loadMap(std::wstring mapPath);
-    short normalize();
+    short loadMap();
+    short saveMap();
 
-    void setBPM(double BPMtoNormalize);
-    double getBPM();
-    short autoDetectBPM();
-};
-
-struct Duration
-{
-int duration, priority;
-double BPM;
-Duration(int duration, int priority, double BPM) {
-    this->duration = duration;
-    this->priority = priority;
-    this->BPM = BPM;
-}
+    std::deque<TimingPoint *> &getTPs();
+    const int &getLastObjectTime();
 };
 
 struct TimingPoint

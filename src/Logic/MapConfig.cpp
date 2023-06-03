@@ -15,10 +15,13 @@ MapConfig &MapConfig::i()
 
 void MapConfig::reset()
 {
-    BPMtoNormalize = 120.0;
-    mapPath.clear();
     infoBeforeTPs.clear();
     infoAfterTPs.clear();
+
+    for (auto &tp : timingPoints) {
+        delete tp;
+    }
+
     timingPoints.clear();
     lastObjectTime = 0;
 }
@@ -26,10 +29,9 @@ void MapConfig::reset()
 /// @brief 
 /// @param mapPath 
 /// @return 0 - ok, 1 - failed to open file
-short MapConfig::loadMap(std::wstring mapPath)
+short MapConfig::loadMap()
 {
     reset();
-    this->mapPath = mapPath;
 
     std::ifstream inputMap(mapPath);
     std::string line;
@@ -105,7 +107,36 @@ short MapConfig::loadMap(std::wstring mapPath)
     return 0;
 }
 
-short MapConfig::normalize()
+short MapConfig::saveMap()
+{
+    std::ofstream output(mapPath);
+
+    output << infoBeforeTPs;
+
+    for (auto &tp : timingPoints) {
+        output << tp->time << ',' << tp->beatLength << ','
+               << tp->meter << ',' << tp->sampleSet << ','
+               << tp->sampleIndex << ',' << tp->volume << ','
+               << tp->uninherited << ',' << tp->effects << '\n';
+    }
+
+    output << infoAfterTPs;
+
+    output.close();
+    return 0;
+}
+
+std::deque<TimingPoint *> &MapConfig::getTPs()
+{
+    return timingPoints;
+}
+
+const int &MapConfig::getLastObjectTime()
+{
+    return lastObjectTime;
+}
+
+/*short MapConfig::normalize()
 {
     if (autoDetectBPM() == 1) return 1;
     std::ofstream output(mapPath);
@@ -130,108 +161,4 @@ short MapConfig::normalize()
 
     output.close();
     return 0;
-}
-
-void MapConfig::setBPM(double BPMtoNormalize)
-{
-    this->BPMtoNormalize = 60000.0 / BPMtoNormalize;
-}
-
-double MapConfig::getBPM()
-{
-    return BPMtoNormalize;
-}
-
-/// @brief 
-/// @return 0 - ok, 1 - map not loaded
-short MapConfig::autoDetectBPM()
-{
-    if (loadMap(mapPath)) return 1;
-
-    std::deque<Duration> UTPdurations;  // UTP - uninherited timing point
-    std::string timingPoint;
-
-    int firstTime = 0;
-    int secondTime = 0;
-    double firstBPM;
-    double secondBPM;
-    TimingPoint *lastUTP;
-
-    bool oneTimeFlag = true;
-    bool exceededLastObject = false;
-
-    for (auto &tp : timingPoints) {
-        if (!tp->uninherited) continue;
-        Duration newDuration(0, 0, tp->beatLength);
-        bool found = false;
-        for (auto &duration : UTPdurations) {
-            if (duration.BPM == newDuration.BPM) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            UTPdurations.push_back(newDuration);
-        }
-    }
-
-    int priority = 0;
-    for (auto &tp : timingPoints) {
-        if (!tp->uninherited) continue;
-        lastUTP = tp;
-        secondTime = tp->time;
-        secondBPM = tp->beatLength;
-
-        if (secondTime > lastObjectTime) {
-            exceededLastObject = true;
-            secondTime = lastObjectTime;
-        }
-
-        if (oneTimeFlag) {
-            oneTimeFlag = false;
-            firstBPM = secondBPM;
-        }
-
-        for (auto &duration : UTPdurations) {
-            if (duration.BPM == firstBPM) {
-                duration.duration += (secondTime - firstTime);
-                duration.priority = priority;
-                break;
-            }
-        }
-
-        firstBPM = secondBPM;
-        firstTime = secondTime;
-        priority++;
-    }
-
-    for (auto &duration : UTPdurations) {
-        if (duration.BPM == firstBPM) {
-            duration.priority = priority;
-            break;
-        }
-    }
-
-    if (lastUTP->time < lastObjectTime) {
-        for (auto &duration : UTPdurations) {
-            if (duration.BPM == lastUTP->beatLength) {
-                duration.duration += lastObjectTime - lastUTP->time;
-                break;
-            }
-        }
-    }
-
-    Duration maxDuration(-1, -1, 0.0);
-    for (auto &duration : UTPdurations) {
-        if ((duration.duration > maxDuration.duration)
-        || (duration.duration == maxDuration.duration && duration.priority > maxDuration.priority)) {
-            maxDuration.duration = duration.duration;
-            maxDuration.BPM = duration.BPM;
-            maxDuration.priority = duration.priority;
-        }
-    }
-
-    BPMtoNormalize = maxDuration.BPM;
-
-    return 0;
-}
+}*/
