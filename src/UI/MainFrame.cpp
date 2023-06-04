@@ -10,7 +10,7 @@ MainFrame::MainFrame(const wxString &title, const wxPoint &pos, const wxSize &si
 {
     // Panel + Sizer
     mainPanel = new wxPanel(this);
-    mainPanel->SetBackgroundColour(wxColour("pink"));
+    mainPanel->SetBackgroundColour(wxColour(0xc255cc));
 
     sizer = new wxGridBagSizer(10, 10);
 

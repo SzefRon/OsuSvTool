@@ -16,7 +16,9 @@ private:
     wxButton *generateButton;
     wxRadioButton *autoButton;
     wxRadioButton *customBPMbutton;
+    wxTimer *timer;
     void OnAutoButtonPress(wxCommandEvent& event);
     void OnCustomBPMButtonPress(wxCommandEvent& event);
     void OnGeneratePress(wxCommandEvent& event);
+    void OnGenerateWait(wxTimerEvent& event);
 };

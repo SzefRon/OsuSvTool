@@ -6,6 +6,7 @@
 NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size, long style, const wxString &name)
     : wxPanel(parent, id, pos, size, style, name)
 {
+    timer = new wxTimer(this, wxID_ANY);
     wxGridBagSizer *sizer = new wxGridBagSizer(10, 10);
 
     // Empty row
@@ -33,8 +34,8 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
     sizer->Add(radioSizer, wxGBPosition(1, 0), wxGBSpan(1, 2), wxGROW | wxLEFT | wxRIGHT, 10);
 
     // Text + Spinctrl
-    wxStaticText *bpmText = new wxStaticText(this, wxID_ANY, "Bpm to normalize to:");
-    sizer->Add(bpmText, wxGBPosition(2, 0), wxGBSpan(1, 1), wxALIGN_CENTER | wxLEFT, 10);
+    wxStaticText *bpmLabel = new wxStaticText(this, wxID_ANY, "Bpm to normalize to:");
+    sizer->Add(bpmLabel, wxGBPosition(2, 0), wxGBSpan(1, 1), wxALIGN_CENTER | wxLEFT, 10);
 
     bpmSpinCtrl = new wxSpinCtrlDouble(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 16384L, 0.0, 1000000.0, 120.0, 1.0);
     bpmSpinCtrl->SetDigits(3);
@@ -65,6 +66,7 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
     Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnAutoButtonPress, this, autoButton->GetId());
     Bind(wxEVT_RADIOBUTTON, &NormalizePanel::OnCustomBPMButtonPress, this, customBPMbutton->GetId());
     Bind(wxEVT_BUTTON, &NormalizePanel::OnGeneratePress, this, generateButton->GetId());
+    Bind(wxEVT_TIMER, &NormalizePanel::OnGenerateWait, this, timer->GetId());
 }
 
 void NormalizePanel::reset()
@@ -93,6 +95,16 @@ void NormalizePanel::OnCustomBPMButtonPress(wxCommandEvent &event)
 
 void NormalizePanel::OnGeneratePress(wxCommandEvent & event)
 {
-    normalizer.normalize();
-    MapConfig::i().saveMap();
+    if (normalizer.normalize() == 0) {
+        generateButton->Disable();
+        MapConfig::i().saveMap();
+        generateButton->SetLabel("Done");
+        timer->Start(1500);
+    }
+}
+
+void NormalizePanel::OnGenerateWait(wxTimerEvent & event)
+{
+    generateButton->Enable();
+    generateButton->SetLabel("Generate");
 }

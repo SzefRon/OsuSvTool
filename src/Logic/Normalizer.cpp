@@ -115,6 +115,8 @@ short Normalizer::autoDetectBPM()
     return 0;
 }
 
+/// @brief 
+/// @return 0 - ok, 1 - map not loaded
 short Normalizer::normalize()
 {
     if (autoDetectBPM() == 1) return 1;
