@@ -48,8 +48,8 @@ short MapConfig::loadMap()
 
     // Timing points
     while (std::getline(inputMap, line, '\n')) {
-        if (line.empty() || line.at(0) == '[') {
-            infoAfterTPs += line;
+        if (line.empty() || line == "[HitObjects]") {
+            infoAfterTPs += line + '\n';
             break;
         }
         std::string val;
@@ -77,10 +77,12 @@ short MapConfig::loadMap()
     }
 
     // Info
-    while (std::getline(inputMap, line, '\n')) {
-        infoAfterTPs += line + '\n';
-        if (line == "[HitObjects]") {
-            break;
+    if (line != "[HitObjects]") {
+        while (std::getline(inputMap, line, '\n')) {
+            infoAfterTPs += line + '\n';
+            if (line == "[HitObjects]") {
+                break;
+            }
         }
     }
 
@@ -126,6 +128,18 @@ short MapConfig::saveMap()
     return 0;
 }
 
+void MapConfig::insertTP(TimingPoint *newTp)
+{
+    int len = timingPoints.size();
+    for (int i = 0; i < len; i++) {
+        if (timingPoints.at(i)->time > newTp->time) {
+            timingPoints.insert(timingPoints.begin() + i, newTp);
+            return;
+        }
+    }
+    timingPoints.push_back(newTp);
+}
+
 std::deque<TimingPoint *> &MapConfig::getTPs()
 {
     return timingPoints;
@@ -135,30 +149,3 @@ const int &MapConfig::getLastObjectTime()
 {
     return lastObjectTime;
 }
-
-/*short MapConfig::normalize()
-{
-    if (autoDetectBPM() == 1) return 1;
-    std::ofstream output(mapPath);
-
-    output << infoBeforeTPs;
-
-    for (auto &tp : timingPoints) {
-        output << tp->time << ',' << tp->beatLength << ','
-               << tp->meter << ',' << tp->sampleSet << ','
-               << tp->sampleIndex << ',' << tp->volume << ','
-               << tp->uninherited << ',' << tp->effects << '\n';
-        if (tp->uninherited && tp->beatLength != BPMtoNormalize) {
-            double normalizedSV = -100.0 / (tp->beatLength / BPMtoNormalize);
-            output << tp->time << ',' << normalizedSV << ','
-                   << tp->meter << ',' << tp->sampleSet << ','
-                   << tp->sampleIndex << ',' << tp->volume << ','
-                   << 0 << ',' << tp->effects << '\n';
-        }
-    }
-
-    output << infoAfterTPs;
-
-    output.close();
-    return 0;
-}*/

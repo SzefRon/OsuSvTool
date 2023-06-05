@@ -24,6 +24,7 @@ public:
     void reset();
     short loadMap();
     short saveMap();
+    void insertTP(TimingPoint *newTp);
 
     std::deque<TimingPoint *> &getTPs();
     const int &getLastObjectTime();

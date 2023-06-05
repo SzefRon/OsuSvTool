@@ -55,10 +55,10 @@ NormalizePanel::NormalizePanel(wxWindow *parent, wxWindowID id, const wxPoint &p
 
     sizer->AddGrowableCol(1, 1);
 
-    sizer->AddGrowableRow(0, 1);
-    sizer->AddGrowableRow(3, 1);
-    sizer->AddGrowableRow(4, 2);
-    sizer->AddGrowableRow(5, 1);
+    sizer->AddGrowableRow(0, 3);
+    sizer->AddGrowableRow(3, 3);
+    sizer->AddGrowableRow(4, 1);
+    sizer->AddGrowableRow(5, 3);
 
     this->SetSizer(sizer);
 
@@ -106,5 +106,5 @@ void NormalizePanel::OnGeneratePress(wxCommandEvent & event)
 void NormalizePanel::OnGenerateWait(wxTimerEvent & event)
 {
     generateButton->Enable();
-    generateButton->SetLabel("Generate");
+    generateButton->SetLabel("Generate SVs");
 }
