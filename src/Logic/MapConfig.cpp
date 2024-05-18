@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <set>
+#include <filesystem>
 
 MapConfig::MapConfig()
 {}
@@ -33,7 +34,8 @@ short MapConfig::loadMap()
 {
     reset();
 
-    std::ifstream inputMap(mapPath);
+    std::ifstream inputMap;
+    inputMap.open(std::filesystem::path(mapPath));
     std::string line;
 
     if (!inputMap.is_open()) return 1;
@@ -111,7 +113,8 @@ short MapConfig::loadMap()
 
 short MapConfig::saveMap()
 {
-    std::ofstream output(mapPath);
+    std::ofstream output;
+    output.open(std::filesystem::path(mapPath));
 
     output << infoBeforeTPs;
 
