@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wx/wx.h>
+#include <wx/spinctrl.h>
 #include "Logic/PunchGenerator.h"
 
 class PunchPanel : public wxPanel 
